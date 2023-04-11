@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Hackathon.Models;
+using Microsoft.AspNetCore.Cors;
 
 namespace Hackathon.Controllers
 {
@@ -21,6 +22,7 @@ namespace Hackathon.Controllers
         }
 
         // GET: api/Transactions
+
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Transaction>>> GetTransactions()
         {
@@ -82,6 +84,7 @@ namespace Hackathon.Controllers
 
         // POST: api/Transactions
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        
         [HttpPost]
         public async Task<ActionResult<Transaction>> PostTransaction(Transaction transaction)
         {
@@ -94,6 +97,21 @@ namespace Hackathon.Controllers
 
             return CreatedAtAction(nameof(GetTransaction), new { id = transaction.Id }, transaction);
         }
+        [HttpGet("category-sum")]
+        public ActionResult<IEnumerable<dynamic>> GetCategorySums()
+        {
+            // Group items by category and sum their prices
+            var result = _context.Transactions.GroupBy(item => item.Category)
+                               .Select(group => new
+                               {
+                                   Category = group.Key,
+                                   Sum = group.Sum(item => item.Amount)
+                               })
+                               .ToList();
+
+            return Ok(result);
+        }
+
 
         // DELETE: api/Transactions/5
         [HttpDelete("{id}")]
@@ -108,7 +126,7 @@ namespace Hackathon.Controllers
             {
                 return NotFound();
             }
-
+            
             _context.Transactions.Remove(transaction);
             await _context.SaveChangesAsync();
 
